@@ -68,7 +68,7 @@ class Snake {
             }
         },
         this.die = () => {
-            document.getElementById('texto').innerHTML = 'You lost, your score: '+points;
+            document.getElementById('text').innerHTML = 'You lost, your score: '+points;
             // in main.js
             stop();
         },
