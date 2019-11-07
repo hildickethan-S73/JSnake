@@ -7,7 +7,7 @@ const gridY = 800;
 // needs to be a non-residual division of the grid
 // otherwise snake pieces will overlap
 const gridSize = 32;
-
+let points = 0;
 // snake
 let pieces = [];
 
@@ -15,7 +15,7 @@ let pieces = [];
 function draw(array) {
     array.forEach((element,index) => {
         // odd squares and even squares different colours
-        (index%2 == 0) ? context.fillStyle = "#08B3E5" : context.fillStyle = "#0FBED8";
+        (index%2 == 0) ? context.fillStyle = "#001B87" : context.fillStyle = "#00A6D7";
         context.fillRect(element.position.x, element.position.y, gridSize, gridSize);
         
     });
@@ -31,6 +31,8 @@ let interval;
 let head;
 
 function start() {
+    points = 0;
+    texto.innerHTML = "Points: "+points;
     // if start is clicked again
     if (interval) {
         clearInterval(interval);
@@ -44,28 +46,26 @@ function start() {
     // rename for ease of use
     head = pieces[0];
     let ball = addBall();
-    
+
     // listener for direction changing
     document.addEventListener('keyup',updateDirection);
     interval = setInterval(function() {
         // movement
         head.move();
-
         // once more than just a head it has to update all other pieces
         if (pieces.length > 1) {
             updateBody();
         }
         
-        if (
-            between(head.position.x, ball.x, ball.x+gridSize)
-            &&
-            between(head.position.y, ball.y, ball.y+gridSize)
-            ) {
+        if (ballCheck(ball)) {
             
-            // add 2 pieces per ball because the snake is small otherwise
-            addPiece();
-            updateBody();
-            addPiece();
+            // add 4 pieces per ball to make a whole square
+            for (let i = 0; i < 4; i++) {
+                addPiece();
+                updateBody();
+            }
+            points++;
+            texto.innerHTML = 'Points: '+points;
             ball = addBall();
         }
 
@@ -77,6 +77,25 @@ function start() {
 
 function between(x, min, max) {
     return min <= x && x <= max;
+}
+
+function ballCheck(ball) {
+    let checkX = false;
+    let checkY = false;
+    if (between(head.position.x, ball.x, ball.x+gridSize) 
+        ||
+        between(head.position.x+gridSize, ball.x, ball.x+gridSize)
+        ) {
+        checkX = true;
+    }
+
+    if (between(head.position.y, ball.y, ball.y+gridSize)
+        ||
+        between(head.position.y+gridSize, ball.y, ball.y+gridSize)) {
+        checkY = true;
+    }
+    
+    return checkX && checkY;
 }
 
 function stop() {
@@ -100,11 +119,14 @@ function updateBody() {
     }
 }
 
+// adds a ball 
 function addBall(currentBall = null) {
     let ballPos;
+    // uses old position
     if (currentBall) {
         ballPos = currentBall;
     } else {
+        // generates new position if none specified
         ballPos = {
             x: Math.floor(Math.random()*(24*gridSize)),
             y: Math.floor(Math.random()*(24*gridSize))
@@ -116,104 +138,25 @@ function addBall(currentBall = null) {
 }
 
 function updateDirection(e){
-  if (e.keyCode === 38 /* up */ || e.keyCode === 87 /* w */ || e.keyCode === 90 /* z */){
-    head.move('up');
-  }
-  if (e.keyCode === 39 /* right */ || e.keyCode === 68 /* d */){
-    head.move('right');
-  }
-  if (e.keyCode === 40 /* down */ || e.keyCode === 83 /* s */){
-    head.move('down');
-  }
-  if (e.keyCode === 37 /* left */ || e.keyCode === 65 /* a */ || e.keyCode === 81 /* q */){
-    head.move('left');
-  }
-}
-
-// snake class
-function Snake(x = 80, y = 80, prevPosition = null) {
-    this.position = {
-        x: x,
-        y: y
-    },
-    this.directionX = 8,
-    this.directionY = 8,
-    this.prevPosition = prevPosition,
-    this.direction = 'right',
-
-    this.move = (direction = this.direction) => {
-        switch (direction) {
-            case 'right':
-                this.right();
-                break;
-
-            case 'left':
-                this.left();
-                break;
-
-            case 'down':
-                this.down();
-                break;
-
-            case 'up':
-                this.up();
-                break;
-        
-            default:
-                break;
+    if (e.keyCode === 38 /* up */ || e.keyCode === 87 /* w */ || e.keyCode === 90 /* z */){
+        if (head.direction != 'up') {
+            head.changeDirection('up');
         }
     }
-
-    this.right = () => {
-        this.direction = 'right';
-        this.savePreviousPosition();
-        this.position.x += this.directionX;
-        this.checkHorizontal();
-    },
-
-    this.left = () => {
-        this.direction = 'left';
-        this.savePreviousPosition();
-        this.position.x -= this.directionX;
-        this.checkHorizontal();
-    },
-
-    this.down = () => {
-        this.direction = 'down';
-        this.savePreviousPosition();
-        this.position.y += this.directionY;
-        this.checkVertical();
-    },
-
-    this.up = () => {
-        this.direction = 'up';
-        this.savePreviousPosition();
-        this.position.y -= this.directionY;
-        this.checkVertical();
-    },
-
-    this.checkHorizontal = () => {
-        if (this.position.x > 800 || this.position.x < 0) {
-            this.die();
+    if (e.keyCode === 39 /* right */ || e.keyCode === 68 /* d */){
+        if (head.direction != 'right') {
+            head.changeDirection('right');
         }
-    },
-
-    this.checkVertical = () => {
-        if (this.position.y > 800 || this.position.y < 0) {
-            this.die();
+    }
+    if (e.keyCode === 40 /* down */ || e.keyCode === 83 /* s */){
+        if (head.direction != 'down') {
+            head.changeDirection('down');
+            
         }
-    }, 
-
-    this.die = () => {
-        texto.innerHTML = 'Has perdido';
-        stop();
-    },
-    
-    this.savePreviousPosition = () => {
-        // this.prevPosition = this.position; creaba un pointer y no es lo que queremos
-        this.prevPosition = {
-            x: this.position.x,
-            y: this.position.y
-        };
+    }
+    if (e.keyCode === 37 /* left */ || e.keyCode === 65 /* a */ || e.keyCode === 81 /* q */){
+        if (head.direction != 'left') {
+            head.changeDirection('left');
+        }
     }
 }
