@@ -1,41 +1,28 @@
 const canvas = document.getElementById('myCanvas');
 const text = document.getElementById('text');
 const context = canvas.getContext('2d');
+
 // untested without square
 const gridX = document.getElementById('myCanvas').getAttribute('width');
 const gridY = document.getElementById('myCanvas').getAttribute('height');
+
 // needs to be a non-residual division of the grid
 // otherwise snake pieces will overlap
 const gridSize = 32;
 let piecesPerBall;
 let points = 0;
+
 // snake
 let pieces = [];
-
-// draws the snake on the canvas
-function draw(array) {
-    array.forEach((element,index) => {
-        // odd squares and even squares different colours
-        // (index%2 == 0) ? context.fillStyle = "#001B87" : context.fillStyle = "#00A6D7";
-        context.fillStyle = 'white';
-        if (index == 0) {
-            context.fillStyle = 'red';
-        }
-        context.fillRect(element.position.x, element.position.y, gridSize, gridSize);
-    });
-}
-
-function clearCanvas () {
-    canvas.width = canvas.width;
-}
-
 // global variable to clear interval
 let interval;
-// rename head for ease of use
+// rename head globally for ease of use
 let head;
 
 function start() {
+    // get custom pieces per ball or default 4
     piecesPerBall = document.getElementById('piecesPerBall').value.trim() || 4;
+    // reset points to 0
     points = 0;
     text.innerHTML = "Points: "+points;
     // if start is clicked again
@@ -83,27 +70,40 @@ function start() {
     }, 17);
 }
 
-function between(x, min, max) {
-    return min <= x && x <= max;
+// CANVAS FUNCTIONS
+
+// draws the snake on the canvas
+function draw(array) {
+    array.forEach((element,index) => {
+        // odd squares and even squares different colours
+        // (index%2 == 0) ? context.fillStyle = "#001B87" : context.fillStyle = "#00A6D7";
+        context.fillStyle = 'white';
+        if (index == 0) {
+            context.fillStyle = 'red';
+        }
+        context.fillRect(element.position.x, element.position.y, gridSize, gridSize);
+    });
 }
 
-function ballCheck(ball) {
-    let checkX = false;
-    let checkY = false;
-    if (between(head.position.x, ball.x, ball.x+gridSize) 
-        ||
-        between(head.position.x+gridSize, ball.x, ball.x+gridSize)
-        ) {
-        checkX = true;
-    }
+function clearCanvas () {
+    canvas.width = canvas.width;
+}
 
-    if (between(head.position.y, ball.y, ball.y+gridSize)
-        ||
-        between(head.position.y+gridSize, ball.y, ball.y+gridSize)) {
-        checkY = true;
+// SNAKE FUNCTIONS
+
+// adds a new piece based on the previous position of the last piece
+function addPiece() {
+    let lastPiece = pieces[pieces.length-1];
+    let newPiece =  new SnakePiece(lastPiece.prevPosition.x, lastPiece.prevPosition.y)
+    pieces.push(newPiece);
+}
+
+function updateBody() {
+    for (let i = 1; i < pieces.length; i++) {
+        const prevElement = pieces[i-1];
+        const prevPosition = pieces[i].position;
+        pieces[i] = new SnakePiece(prevElement.prevPosition.x, prevElement.prevPosition.y, prevPosition);
     }
-    
-    return checkX && checkY;
 }
 
 // function snakeCheck() {
@@ -129,27 +129,23 @@ function ballCheck(ball) {
 //     return checkX && checkY;
 // }
 
-function stop() {
-    if (interval) {
-        clearInterval(interval);
-	console.log(pieces);    
-	}
-}
-
-// adds a new piece based on the previous position of the last piece
-function addPiece() {
-    let lastPiece = pieces[pieces.length-1];
-    let newPiece =  new SnakePiece(lastPiece.prevPosition.x, lastPiece.prevPosition.y)
-    pieces.push(newPiece);
-}
-
-function updateBody() {
-    for (let i = 1; i < pieces.length; i++) {
-        const prevElement = pieces[i-1];
-        const prevPosition = pieces[i].position;
-        pieces[i] = new SnakePiece(prevElement.prevPosition.x, prevElement.prevPosition.y, prevPosition);
+// updates the direction
+function updateDirection(e){
+    if (e.keyCode === 38 /* up */ || e.keyCode === 87 /* w */ || e.keyCode === 90 /* z */){
+        head.changeDirection('up');
+    }
+    if (e.keyCode === 39 /* right */ || e.keyCode === 68 /* d */){
+        head.changeDirection('right');
+    }
+    if (e.keyCode === 40 /* down */ || e.keyCode === 83 /* s */){
+        head.changeDirection('down');
+    }
+    if (e.keyCode === 37 /* left */ || e.keyCode === 65 /* a */ || e.keyCode === 81 /* q */){
+        head.changeDirection('left');
     }
 }
+
+// BALL FUNCTIONS
 
 // adds a ball 
 function addBall(currentBall = null) {
@@ -169,18 +165,83 @@ function addBall(currentBall = null) {
     return ballPos;
 }
 
-// updates the direction
-function updateDirection(e){
-    if (e.keyCode === 38 /* up */ || e.keyCode === 87 /* w */ || e.keyCode === 90 /* z */){
-        head.changeDirection('up');
+function ballCheck(ball) {
+    let checkX = false;
+    let checkY = false;
+    if (between(head.position.x, ball.x, ball.x+gridSize) 
+        ||
+        between(head.position.x+gridSize, ball.x, ball.x+gridSize)
+        ) {
+        checkX = true;
     }
-    if (e.keyCode === 39 /* right */ || e.keyCode === 68 /* d */){
-        head.changeDirection('right');
+
+    if (between(head.position.y, ball.y, ball.y+gridSize)
+        ||
+        between(head.position.y+gridSize, ball.y, ball.y+gridSize)) {
+        checkY = true;
     }
-    if (e.keyCode === 40 /* down */ || e.keyCode === 83 /* s */){
-        head.changeDirection('down');
+    
+    return checkX && checkY;
+}
+
+// OTHER FUNCTIONS
+
+function stop() {
+    if (interval) {
+        clearInterval(interval);
+        let regex = new RegExp(/^([a-zA-Z0-9]{3,15})$/);
+        let name;
+        do {
+            name = prompt('Input your name for rankings (leave blank for no ranking)\nOnly 3 to 15 alphanumeric characters.');
+            name = name.trim();
+            if((name && !regex.test(name))) {
+                alert('Bad input');
+            }
+            // name has to pass regex
+            // blank name wont be ranked
+            // ! because we want to exit when one of these is true
+        } while (!((name && regex.test(name)) || !name));
+
+        if (name) {
+            addRanking(name,points,piecesPerBall);
+        }
+	}
+}
+
+function between(x, min, max) {
+    return min <= x && x <= max;
+}
+
+function addRanking(playerName, playerPoints) {
+    let table = document.getElementById('rankingTable');
+    let exists = false;
+    if (table.childElementCount > 1) {
+        for (let i = 1; i < table.children.length; i++) {
+            const child = table.children[i];
+            let name = child.children[0].innerHTML;
+            let points = child.children[1].innerHTML;
+            // if name already exists in table then update points if higher
+            if (name == playerName) {
+                exists = true;
+                if (points < playerPoints) {
+                    child.children[1].innerHTML = playerPoints;
+                }
+            }
+        }
     }
-    if (e.keyCode === 37 /* left */ || e.keyCode === 65 /* a */ || e.keyCode === 81 /* q */){
-        head.changeDirection('left');
+
+    if (!exists) {
+        let tr = document.createElement('tr');
+    
+        let tdName = document.createElement('td');
+        tdName.innerHTML = playerName;
+        tr.append(tdName);
+        
+        let tdPoints = document.createElement('td');
+        tdPoints.innerHTML = playerPoints;
+        tr.append(tdPoints);
+        
+        table.append(tr);
     }
+
 }
