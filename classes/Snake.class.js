@@ -58,12 +58,12 @@ class Snake {
             this.checkVertical();
         },
         this.checkHorizontal = () => {
-            if (this.position.x > 800 || this.position.x < 0) {
+            if (this.position.x > document.getElementById('myCanvas').getAttribute('width') || this.position.x < 0) {
                 this.die();
             }
         },
         this.checkVertical = () => {
-            if (this.position.y > 800 || this.position.y < 0) {
+            if (this.position.y > document.getElementById('myCanvas').getAttribute('height') || this.position.y < 0) {
                 this.die();
             }
         },

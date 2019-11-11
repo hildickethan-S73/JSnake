@@ -2,11 +2,12 @@ const canvas = document.getElementById('myCanvas');
 const text = document.getElementById('text');
 const context = canvas.getContext('2d');
 // untested without square
-const gridX = 800;
-const gridY = 800;
+const gridX = document.getElementById('myCanvas').getAttribute('width');
+const gridY = document.getElementById('myCanvas').getAttribute('height');
 // needs to be a non-residual division of the grid
 // otherwise snake pieces will overlap
 const gridSize = 32;
+let piecesPerBall;
 let points = 0;
 // snake
 let pieces = [];
@@ -16,7 +17,7 @@ function draw(array) {
     array.forEach((element,index) => {
         // odd squares and even squares different colours
         // (index%2 == 0) ? context.fillStyle = "#001B87" : context.fillStyle = "#00A6D7";
-        context.fillStyle = 'black';
+        context.fillStyle = 'white';
         if (index == 0) {
             context.fillStyle = 'red';
         }
@@ -34,6 +35,7 @@ let interval;
 let head;
 
 function start() {
+    piecesPerBall = document.getElementById('piecesPerBall').value.trim() || 4;
     points = 0;
     text.innerHTML = "Points: "+points;
     // if start is clicked again
@@ -65,8 +67,8 @@ function start() {
         
 
         if (ballCheck(ball)) {
-            // add 4 pieces per ball to make a whole square
-            for (let i = 0; i < 4; i++) {
+            // add X pieces per ball
+            for (let i = 0; i < piecesPerBall; i++) {
                 addPiece();
                 updateBody();
             }
@@ -130,7 +132,8 @@ function ballCheck(ball) {
 function stop() {
     if (interval) {
         clearInterval(interval);
-    }
+	console.log(pieces);    
+	}
 }
 
 // adds a new piece based on the previous position of the last piece
@@ -157,11 +160,11 @@ function addBall(currentBall = null) {
     } else {
         // generates new position if none specified
         ballPos = {
-            x: Math.floor(Math.random()*(24*gridSize)),
-            y: Math.floor(Math.random()*(24*gridSize))
+            x: Math.floor(Math.random()*(gridX-gridSize)),
+            y: Math.floor(Math.random()*(gridY-gridSize))
         }
     }
-    context.fillStyle = "white";
+    context.fillStyle = "green";
     context.fillRect(ballPos.x, ballPos.y, gridSize, gridSize);
     return ballPos;
 }

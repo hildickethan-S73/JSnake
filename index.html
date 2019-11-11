@@ -3,13 +3,22 @@
     <head>
         <title>Prueba JS</title>
         <meta charset="UTF-8"/>
+        <link rel="stylesheet" href="main.css">
     </head>
-    <body style="background-color:grey">
-        <input type="button" onclick="start()" value="start">
-        <input type="button" onclick="stop()" value="stop">
-        <span id="text"></span><br>
+    <body>
+        <div class="left">
+            <input type="button" onclick="start()" value="start" class="button green">
+            <input type="button" onclick="stop()" value="stop" class="button red"><br><br>
+            <span>Pieces per ball: </span> <input type="text" id="piecesPerBall" placeholder="4"><br>
+            <span id="text">Points: 0</span><br>
 
-        <canvas width="800" height="800" id="myCanvas" style="border: 1px solid black"></canvas>
+            
+        </div>
+
+        <div class="center">
+    
+            <canvas width="800" height="800" id="myCanvas" style="border: 1px solid white"></canvas>
+        </div>
 
         <script src="main.js"></script>
         <script src="classes/Snake.class.js"></script>
