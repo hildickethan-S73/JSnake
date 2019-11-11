@@ -6,6 +6,12 @@ const context = canvas.getContext('2d');
 const gridX = document.getElementById('myCanvas').getAttribute('width');
 const gridY = document.getElementById('myCanvas').getAttribute('height');
 
+let table = document.getElementById('rankingTable');
+let rankings = getLocalstorage();
+rankings.forEach(element => {
+    addRanking(element.name,element.points);
+});
+
 // needs to be a non-residual division of the grid
 // otherwise snake pieces will overlap
 const gridSize = 32;
@@ -203,7 +209,7 @@ function stop() {
         } while (!((name && regex.test(name)) || !name));
 
         if (name) {
-            addRanking(name,points,piecesPerBall);
+            checkRanking(name,points);
         }
 	}
 }
@@ -212,36 +218,73 @@ function between(x, min, max) {
     return min <= x && x <= max;
 }
 
-function addRanking(playerName, playerPoints) {
+function checkRanking(playerName, playerPoints) {
     let table = document.getElementById('rankingTable');
     let exists = false;
-    if (table.childElementCount > 1) {
-        for (let i = 1; i < table.children.length; i++) {
-            const child = table.children[i];
-            let name = child.children[0].innerHTML;
-            let points = child.children[1].innerHTML;
-            // if name already exists in table then update points if higher
-            if (name == playerName) {
-                exists = true;
-                if (points < playerPoints) {
-                    child.children[1].innerHTML = playerPoints;
-                }
+
+    let rankingLS = getLocalstorage();
+    
+    rankingLS.forEach(element => {
+        if (element.name == playerName) {
+            exists = true;
+        }
+    });
+
+    for (let i = 1; i < table.children.length; i++) {
+        const child = table.children[i];
+        let points = child.children[1].innerHTML;
+        // if name already exists in table then update points if higher
+        if (exists) {
+            if (points < playerPoints) {
+                child.children[1].innerHTML = playerPoints;
+                rankingLS.forEach(element => {
+                    if (element.name == playerName) {
+                        element.points = playerPoints;
+                    }
+                });
+                setLocalstorage(rankingLS);
             }
         }
     }
 
     if (!exists) {
-        let tr = document.createElement('tr');
-    
-        let tdName = document.createElement('td');
-        tdName.innerHTML = playerName;
-        tr.append(tdName);
-        
-        let tdPoints = document.createElement('td');
-        tdPoints.innerHTML = playerPoints;
-        tr.append(tdPoints);
-        
-        table.append(tr);
+        addRanking(playerName,playerPoints);
+        let player = {
+            name: playerName,
+            points: playerPoints
+        };
+        rankingLS.push(player);
+        setLocalstorage(rankingLS);
     }
-
 }
+
+function addRanking(playerName,playerPoints) {
+    let table = document.getElementById('rankingTable');
+    let tr = document.createElement('tr');
+    
+    let tdName = document.createElement('td');
+    tdName.innerHTML = playerName;
+    tr.append(tdName);
+    
+    let tdPoints = document.createElement('td');
+    tdPoints.innerHTML = playerPoints;
+    tr.append(tdPoints);
+    
+    table.append(tr);
+}
+
+function getLocalstorage() {
+    let data = localStorage.getItem('ranking');
+    if (data == null) {
+        data = [];
+    } else {
+        data = JSON.parse(data);
+    }
+    
+    return data;
+}
+
+function setLocalstorage(data) {
+    localStorage.setItem('ranking',JSON.stringify(data));
+}
+
