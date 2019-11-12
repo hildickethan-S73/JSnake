@@ -1,12 +1,17 @@
+// get canvas
 const canvas = document.getElementById('myCanvas');
 const text = document.getElementById('text');
 const context = canvas.getContext('2d');
 
+// set grid size globally
 // untested without square
 const gridX = document.getElementById('myCanvas').getAttribute('width');
 const gridY = document.getElementById('myCanvas').getAttribute('height');
 
-let table = document.getElementById('rankingTable');
+// clear ranking button
+document.getElementById('clearrankingbutton').addEventListener('click',clearRanking());
+
+// fill ranking
 let rankings = getRanking();
 rankings.forEach(element => {
     addRanking(element.name,element.points);
