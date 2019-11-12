@@ -7,7 +7,7 @@ const gridX = document.getElementById('myCanvas').getAttribute('width');
 const gridY = document.getElementById('myCanvas').getAttribute('height');
 
 let table = document.getElementById('rankingTable');
-let rankings = getLocalstorage();
+let rankings = getRanking();
 rankings.forEach(element => {
     addRanking(element.name,element.points);
 });
@@ -218,43 +218,48 @@ function between(x, min, max) {
     return min <= x && x <= max;
 }
 
+// RANKING FUNCTIONS
+
 function checkRanking(playerName, playerPoints) {
     let table = document.getElementById('rankingTable');
+    // delete rankings on DOM
+    while (table.children[1]) {
+        table.removeChild(table.children[1]);
+    }
+    
+    let rankingLS = getRanking();
     let exists = false;
 
-    let rankingLS = getLocalstorage();
-    
+    // check if name already exists
     rankingLS.forEach(element => {
         if (element.name == playerName) {
             exists = true;
         }
     });
-
-    for (let i = 1; i < table.children.length; i++) {
-        const child = table.children[i];
-        let points = child.children[1].innerHTML;
-        // if name already exists in table then update points if higher
-        if (exists) {
-            if (points < playerPoints) {
-                child.children[1].innerHTML = playerPoints;
-                rankingLS.forEach(element => {
-                    if (element.name == playerName) {
-                        element.points = playerPoints;
-                    }
-                });
-                setLocalstorage(rankingLS);
-            }
-        }
-    }
-
+    
+    // if it doesnt exist create it and push to LS
     if (!exists) {
-        addRanking(playerName,playerPoints);
         let player = {
             name: playerName,
             points: playerPoints
         };
         rankingLS.push(player);
-        setLocalstorage(rankingLS);
+        rankingLS = sortRanking(rankingLS);
+        setRanking(rankingLS);
+
+        addAllRankings(rankingLS);
+    } else {
+        rankingLS.forEach(element => {
+            if (element.name == playerName) {
+                if (element.points < playerPoints) {
+                    element.points = playerPoints;
+                    rankingLS = sortRanking(rankingLS);
+                    setRanking(rankingLS);
+                }
+            }
+        });
+
+        addAllRankings(rankingLS);
     }
 }
 
@@ -273,7 +278,28 @@ function addRanking(playerName,playerPoints) {
     table.append(tr);
 }
 
-function getLocalstorage() {
+function addAllRankings(data) {
+    data.forEach(element => {
+        addRanking(element.name,element.points);
+    });
+}
+
+function sortRanking(data) {
+    data = data.sort((a,b) => (a.points < b.points) ? 1 : -1);
+    return data;
+}
+
+function clearRanking() {
+    let table = document.getElementById('rankingTable');
+    // delete rankings on DOM
+    while (table.children[1]) {
+        table.removeChild(table.children[1]);
+    }
+    // delete rankings on LS
+    setRanking([]);
+}
+
+function getRanking() {
     let data = localStorage.getItem('ranking');
     if (data == null) {
         data = [];
@@ -284,7 +310,7 @@ function getLocalstorage() {
     return data;
 }
 
-function setLocalstorage(data) {
+function setRanking(data) {
     localStorage.setItem('ranking',JSON.stringify(data));
 }
 
