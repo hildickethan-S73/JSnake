@@ -9,7 +9,7 @@ const gridX = document.getElementById('myCanvas').getAttribute('width');
 const gridY = document.getElementById('myCanvas').getAttribute('height');
 
 // clear ranking button
-document.getElementById('clearrankingbutton').addEventListener('click',clearRanking());
+document.getElementById('clearrankingbutton').addEventListener('click',() => clearRanking());
 
 // fill ranking
 let rankings = getRanking();
@@ -31,6 +31,7 @@ let interval;
 let head;
 
 function start() {
+    pieces = [];
     // get custom pieces per ball or default 4
     piecesPerBall = document.getElementById('piecesPerBall').value.trim() || 4;
     // reset points to 0
@@ -58,11 +59,7 @@ function start() {
         // once more than just a head it has to update all other pieces
         if (pieces.length > 1) {
             updateBody();
-            // if (snakeCheck()) {
-            //     stop();
-            // }
         }
-        
 
         if (ballCheck(ball)) {
             // add X pieces per ball
@@ -86,11 +83,9 @@ function start() {
 // draws the snake on the canvas
 function draw(array) {
     array.forEach((element,index) => {
-        // odd squares and even squares different colours
-        // (index%2 == 0) ? context.fillStyle = "#001B87" : context.fillStyle = "#00A6D7";
         context.fillStyle = 'white';
         if (index == 0) {
-            context.fillStyle = 'red';
+            context.fillStyle = 'orange';
         }
         context.fillRect(element.position.x, element.position.y, gridSize, gridSize);
     });
@@ -116,29 +111,6 @@ function updateBody() {
         pieces[i] = new SnakePiece(prevElement.prevPosition.x, prevElement.prevPosition.y, prevPosition);
     }
 }
-
-// function snakeCheck() {
-//     let checkX = false;
-//     let checkY = false;
-//     for (let i = 1; i < pieces.length; i++) {
-//         const element = pieces[i];
-//         console.log(element);
-        
-//         if (between(head.position.x, element.position.x, element.position.x+gridSize) 
-//             ||
-//             between(head.position.x+gridSize, element.position.x, element.position.x+gridSize)
-//             ) {
-//             checkX = true;
-//         }
-    
-//         if (between(head.position.y, element.position.y, element.position.y+gridSize)
-//             ||
-//             between(head.position.y+gridSize, element.position.y, element.position.y+gridSize)) {
-//             checkY = true;
-//         }
-//     }
-//     return checkX && checkY;
-// }
 
 // updates the direction
 function updateDirection(e){
@@ -171,7 +143,7 @@ function addBall(currentBall = null) {
             y: Math.floor(Math.random()*(gridY-gridSize))
         }
     }
-    context.fillStyle = "green";
+    context.fillStyle = "deepskyblue";
     context.fillRect(ballPos.x, ballPos.y, gridSize, gridSize);
     return ballPos;
 }
@@ -200,13 +172,16 @@ function ballCheck(ball) {
 function stop() {
     if (interval) {
         clearInterval(interval);
+        interval = null;
         let regex = new RegExp(/^([a-zA-Z0-9]{3,15})$/);
         let name;
         do {
             name = prompt('Input your name for rankings (leave blank for no ranking)\nOnly 3 to 15 alphanumeric characters.');
-            name = name.trim();
-            if((name && !regex.test(name))) {
-                alert('Bad input');
+            if(name) {
+                name = name.trim();
+                if(!regex.test(name)) {
+                    alert('Bad input');
+                }
             }
             // name has to pass regex
             // blank name wont be ranked

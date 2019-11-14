@@ -58,3 +58,7 @@ table {
 #piecesPerBall {
     width: 30px;
 }
+
+#text {
+    font-size: 4em;
+}
